@@ -1,66 +1,73 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# About the Database Architecture
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This document outlines the database structure for the application. For a visual representation, refer to the database diagram in `database/diagrams/payd.pdf`.
 
-## About Laravel
+## Table Descriptions
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### `countries` Table:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Purpose**: Stores country information.
+- **Fields**:
+  - `id_country`: Primary key (unique identifier for each country).
+  - `des_country`: String field holding the name or description of the country.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### `forms` Table:
 
-## Learning Laravel
+- **Purpose**: Represents a collection of fields that belong to a specific form. Each form is uniquely tied to a country.
+- **Fields**:
+  - `id_form`: Primary key (unique identifier for each form).
+  - `id_country`: Foreign key referencing `countries(id_country)` to associate a form with a specific country.
+- **Relationships**:
+  - One-to-one relationship with the `countries` table (i.e., each country can have exactly one form).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### `fields` Table:
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- **Purpose**: Represents individual form fields that can be dynamically added, removed, or edited.
+- **Fields**:
+  - `id_field`: Primary key (unique identifier for each field).
+  - `name`: String field representing the name of the form field.
+  - `required`: Boolean indicating whether the field is mandatory.
+  - `options`: JSON field holding additional options for the field (e.g., choices for select inputs).
+  - `validation_rules`: JSON field containing validation constraints (e.g., min/max length, data type).
+  - `value`: Default value for the field.
+  - `id_field_type`: Foreign key referencing `field_types(id_field_type)` to indicate the type of the field (e.g., text, checkbox, etc.).
+  - `id_field_cat`: Foreign key referencing `field_categories(id_field_cat)` to associate the field with a specific category.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### `field_types` Table:
 
-## Laravel Sponsors
+- **Purpose**: Holds possible types for fields (e.g., text, number, date, etc.).
+- **Fields**:
+  - `id_field_type`: Primary key (unique identifier for each field type).
+  - `des_field_type`: String field describing the field type.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### `field_categories` Table:
 
-### Premium Partners
+- **Purpose**: Holds possible categories for fields like (e.g., general, identity, or bank-related).
+- **Fields**:
+  - `id_field_cat`: Primary key (unique identifier for each field category).
+  - `des_field_cat`: String field describing the field category.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### `form_field` Pivot Table:
 
-## Contributing
+- **Purpose**: Links forms and fields in a many-to-many relationship. A form can have multiple fields, and a field can be shared by multiple forms and that eliminate redendency .
+- **Fields**:
+  - `id_form`: Foreign key referencing `forms(id_form)`.
+  - `id_field`: Foreign key referencing `fields(id_field)`.
+- **Primary Key**: Composite primary key consisting of `id_form` and `id_field`.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### `users` Table:
 
-## Code of Conduct
+- **Purpose**: Stores essential metadata about registered users, such as their unique identifier and the form they filled out. However, the actual information about each user (e.g., name, contact details) is not stored directly in this table. Instead, user-specific data is managed dynamically through **user_inputs** table.
+- **Fields**:
+  - `id_user`: Primary key (unique identifier for each user).
+  - `id_form`: Foreign key referencing `forms(id_form)` to link each user to a specific form they filled out.
+  - `added`: Timestamp when the user was added to the system.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### `user_input` Pivot Table:
 
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- **Purpose**: Stores the inputs for each field that a user has filled out. Links users and fields in a many-to-many relationship with the values submitted by the users.
+- **Fields**:
+  - `id_user`: Foreign key referencing `users(id_user)`.
+  - `id_field`: Foreign key referencing `fields(id_field)`.
+  - `value`: String field that holds the value the user entered for a particular field.
+- **Primary Key**: Composite primary key consisting of `id_user` and `id_field`.
